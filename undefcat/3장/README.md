@@ -1,3 +1,5 @@
+# 템플릿
+
 - 변경되지 않는 부분을 변경되는 부분과 분리하여 계속 재활용 가능하도록 한다.
 
 # 3.1 다시 보는 초난감 DAO
@@ -5,7 +7,7 @@
 ## 3.1.1 예외처리 기능을 갖춘 DAO
 
 - DB 커넥션을 통해 작업을 하고 나면 항상 리소스를 정리해야 한다.
-	- 이는 작업의 성공/실패 여부와 관계없이 항상 이루어져야만 한다.
+  - 이는 작업의 성공/실패 여부와 관계없이 항상 이루어져야만 한다.
 
 ### 수정(삭제) 예외처리
 
@@ -14,7 +16,7 @@ public void deleteAll() throws SQLException {
   Connection c = dataSource.getConnection();
 
   // ------------------------------------------------------------
-  // 이 영역에서 예외가 발생하는 경우, 리소스 반환이 이뤄지지 않는다.
+  // 이 영역에서 예외가 발생하는 경우, 리소스 반환이 이뤄지지 않는다.
   PreparedStatement ps = c.prepareStatement("delete from users");
   ps.executeUpdate();
   // ------------------------------------------------------------
@@ -33,7 +35,7 @@ public void deleteAll() throws SQLException {
     c = dataSource.getConnection();
     ps = c.prepareStatement("delete from users");
     ps.executeUpdate();
-    
+
   } catch (SQLException e) {
     throw e;
   } finally {
@@ -75,7 +77,7 @@ public int getCount() throws SQLException {
     rs = ps.executeQuery();
     rs.next();
     return rs.getInt(1);
-    
+
   } catch (SQLException e) {
     throw e;
   } finally {
@@ -115,7 +117,7 @@ public int getCount() throws SQLException {
 ### 3.2.2 분리와 재사용을 위한 디자인 패턴 적용
 
 - 중복코드를 제거하는 것이 기본
-	- 변하지 않는 부분을 추출하자.
+  - 변하지 않는 부분을 추출하자.
 
 ```java
 public void deleteAll() throws SQLException {
@@ -129,7 +131,7 @@ public void deleteAll() throws SQLException {
     ps = c.prepareStatement("delete from users");
 
     ps.executeUpdate();
-    
+
   } catch (SQLException e) {
     throw e;
   } finally {
@@ -167,7 +169,7 @@ public void deleteAll() throws SQLException {
     ps = makeStatement(c);
 
     ps.executeUpdate();
-    
+
   } catch (SQLException e) {
     throw e;
   } finally {
@@ -209,7 +211,7 @@ private PreparedStatement makeStatement(Connection c) throws SQLException {
 abstract class UserDao {
 
 	// ...
-	
+
 	abstract protected PreparedStatement makeStatement(Connection c) throws SQLException;
 }
 
@@ -240,8 +242,8 @@ public class UserDaoDeleteAll extends UserDao {
 - 예외가 발생하면 이를 메서드 밖으로 던지기
 - 모든 경우에 만들어진 `PreparedStatement`와 `Connection`을 적절히 닫아주기
 
-
 ![3-1.png](./3-1.png)
+
 ```java
 public interface StatementStrategy {
 	PreparedStatement makePreparedStatement(Connection c) throws SQLException;
@@ -267,7 +269,7 @@ public void deleteAll() throws SQLException {
     ps = strategy.makePreparedStatement(c);
 
     ps.executeUpdate();
-    
+
   } catch (SQLException e) {
     throw e;
   } finally {
@@ -294,14 +296,14 @@ public void deleteAll() throws SQLException {
 ### DI 적용을 위한 클라이언트/컨텍스트 분리
 
 - 컨텍스트가 사용할 전략은 컨텍스트를 사용하는 클라이언트가 결정한다.
-	- 사용할 전략을 컨텍스트로 전달한다.
+  - 사용할 전략을 컨텍스트로 전달한다.
 
 ![3-2.png](./3-2.png)
 
 - 결국은 DI
-	- IoC컨테이너: Client
-	- Bean: Strategy
-	- 우리의 코드: Context
+  - IoC컨테이너: Client
+  - Bean: Strategy
+  - 우리의 코드: Context
 - 변하지 않는 컨텍스트 코드가 전략을 주입받아야 하므로, 메서드로 분리한다.
 
 ```java
@@ -309,7 +311,7 @@ public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLE
 
   Connection c = null;
   PreparedStatement ps = null;
-  
+
   try {
     c = dataSource.getConnection();
     ps = stmt.makePreparedStatement(c);
@@ -384,9 +386,9 @@ public void add(User user) throws SQLException {
 ## 3.2.2 전략과 클라이언트의 동거
 
 - 현재까지 코드의 문제점은 다음과 같다.
-	1. 각 오퍼레이션마다 새로운 `StatementStrategy` 구현 클래스를 정의해야 한다.
-		- 클래스 파일이 비약적으로 늘어날 것이다.
-	2. 위의 `user`의 경우 처럼, 다른 의존성이 필요한 경우 이를 생성자로 받도록 각 클래스마다 모두 구현해야만 한다.
+  1.  각 오퍼레이션마다 새로운 `StatementStrategy` 구현 클래스를 정의해야 한다.
+      - 클래스 파일이 비약적으로 늘어날 것이다.
+  2.  위의 `user`의 경우 처럼, 다른 의존성이 필요한 경우 이를 생성자로 받도록 각 클래스마다 모두 구현해야만 한다.
 
 ### 로컬 클래스
 
@@ -418,7 +420,7 @@ public void add(User user) throws SQLException {
 ```
 
 - 메서드에 정의된 클래스는 해당 메서드 스코프에 접근할 수 있다.
-	- 단, `final`이어야만 한다.
+  - 단, `final`이어야만 한다.
 - 이를 이용하면 `user` 를 생성자로부터 받지 않고 바로 사용할 수 있다.
 
 ```java
@@ -456,7 +458,7 @@ public void add(final User user) throws SQLException {
       return ps;
     }
   }
-  
+
   jdbcContextWithStatementStrategy(st);
 }
 ```
@@ -496,7 +498,7 @@ public void add(final User user) throws SQLException {
 
 # 3.4 컨텍스트와 DI
 
-- `jdbcContextWithStatementStrategy` 메서드는 JDBC의 일반적인 실행 맥락을 담고 있으므로,  `UserDao`에서만 사용될 이유는 없다.
+- `jdbcContextWithStatementStrategy` 메서드는 JDBC의 일반적인 실행 맥락을 담고 있으므로, `UserDao`에서만 사용될 이유는 없다.
 
 ### 클래스 분리
 
@@ -557,10 +559,11 @@ public class UserDao {
 - 우리는 `JdbcContext`를 인터페이스로 정의하지 않고, 구체클래스로 정의했다.
 - 그리고 해당 구체클래스를 DI 받도록 했다. 이는 문제가 없을까?
 - 무조건 인터페이스를 사용하는 것이 좋은 것은 아니다.
-	- 인터페이스를 사용하는 근본적인 이유는 구현의 변경 및 대체 가능성이다.
-	- 사실상 대부분의 소프트웨어는 변경의 가능성이 있지만, `JdbcContext`와 같이 특정 기술에 강한 종속성을 가진 클래스의 경우, 기술이 변경되면 구현 자체가 변경되므로 굳이 인터페이스를 둘 필요는 없다.
+  - 인터페이스를 사용하는 근본적인 이유는 구현의 변경 및 대체 가능성이다.
+  - 사실상 대부분의 소프트웨어는 변경의 가능성이 있지만, `JdbcContext`와 같이 특정 기술에 강한 종속성을 가진 클래스의 경우, 기술이 변경되면 구현 자체가 변경되므로 굳이 인터페이스를 둘 필요는 없다.
 
 ![3-3.png](./3-3.png)
+
 - [Avoiding Premature Software Abstractions](https://medium.com/better-programming/avoiding-premature-software-abstractions-8ba2e990930a)
 - [Fundamental theorem of software engineering](https://en.wikipedia.org/wiki/Fundamental_theorem_of_software_engineering)
 
@@ -568,11 +571,11 @@ public class UserDao {
 
 - 스프링 빈으로 `JdbcContext`를 등록하지 않고 사용하고자 한다면, `UserDao`가 `JdbcContext`의 라이프사이클을 직접 책임지게 해도 된다.
 - 이 경우, `JdbcContext`가 필요로하는 `DataSource`를 `UserDao`가 DI 받아서 `JdbcContext`에 넘겨주면 된다.
-	- 인스턴스 생성의 책임이 있는 클래스가 해당 인스턴스의 의존성을 책임져야 한다.
+  - 인스턴스 생성의 책임이 있는 클래스가 해당 인스턴스의 의존성을 책임져야 한다.
 - 이렇게 하면 스프링 빈 설정에서 `JdbcContext`는 제외해도 된다.
-	- 단, `DataSource`는 여전히 존재해야 한다.
+  - 단, `DataSource`는 여전히 존재해야 한다.
 - 어느 방법이 더 좋다고 단정지을 수 없다.
-	- 항상 상황에 따라, 합당한 근거를 가지고 선택하면 된다.
+  - 항상 상황에 따라, 합당한 근거를 가지고 선택하면 된다.
 
 # 3.5 템플릿과 콜백
 
@@ -589,7 +592,7 @@ public class UserDao {
 ## 3.5.2 편리한 콜백의 재활용
 
 - 익명 내부 클래스를 이용한 코드는 보기가 불편하다는 단점이 있다.
-	- 람다로 해결!
+  - 람다로 해결!
 
 ### 콜백의 분리와 재활용
 
@@ -623,7 +626,7 @@ public class UserDao {
 
 - 템플릿/콜백 패턴은 스프링의 전유물은 아니다.
 - 책이 쓰여질 당시에는 몰라도, 요즘은 어디에서나 쉽게 볼 수 있는 디자인 패턴이다.
-	- 프론트엔드 영역에서는 너무 밥먹듯이 사용한다.
+  - 프론트엔드 영역에서는 너무 밥먹듯이 사용한다.
 - 특히 자바8 이후로는 람다로 간결하게 사용할 수 있게 되어, 크게 새로울 것도 없다.
 - ~~따라서 이하 정리 생략~~
 
@@ -694,8 +697,8 @@ public class UserDao {
 
 - `SELECT` 쿼리의 경우, 결과(`ResultSet`)를 받아서 이를 통해 우리의 오브젝트로 변환하는 과정이 필요하다.
 - 이를 위해 `JdbcTemplate`은 두 개의 콜백을 매개변수로 받는다.
-	- 하나는 쿼리를 생성하는 콜백
-	- 하나는 결과를 받는 콜백
+  - 하나는 쿼리를 생성하는 콜백
+  - 하나는 결과를 받는 콜백
 
 ```java
 public class UserDao {
@@ -730,7 +733,7 @@ public class UserDao {
 ```java
 public class UserDao {
 	// ...
-	
+
     public int getCount() {
         return this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
     }
@@ -747,7 +750,7 @@ public class UserDao {
 ```java
 public class UserDao {
 	// ...
-	
+
     public User get(String id) {
         return jdbcTemplate.queryForObject(
                 "SELECT * FROM users WHERE id = ?",
@@ -769,7 +772,7 @@ public class UserDao {
 ```java
 public class UserDao {
 	// ...
-	
+
     public List<User> getAll() {
         return jdbcTemplate.query(
                 "SELECT * FROM users",
@@ -783,5 +786,4 @@ public class UserDao {
 }
 ```
 
-> 사실 이제는 `JdbcTemplate`을 실무에서 사용하지 않는 것으로 알고 있다. 이하 테스트와 관련된 주제나 람다로 호출됐던 `RowMapper` 등의 리팩토링 작업과 관련된 내용은 정리하는게 큰 의미가 없겠다고 생각하여 여기까지 정리하도록 한다.
-
+> 사실 이제는 `JdbcTemplate`을 실무에서 사용하지 않는 것으로 알고 있다. 이하 테스트와 관련된 주제나 람다로 호출됐던 `RowMapper` 등의 리팩토링 작업과 관련된 내용은 정리하는게 큰 의미가 없겠다고 생각하여 여기까지 정리하도록 한다.
